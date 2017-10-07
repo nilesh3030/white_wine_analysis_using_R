@@ -1,0 +1,376 @@
+---
+title: "White_Wine_Quality_analysis"
+author: "Nilesh Kumar Srivastava"
+date: "September 22, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+========================================================
+
+INTRODUCTION : This tidy data set contains 4,898 white wines with 13 variables on quantifying the chemical properties of each wine. At least 3 wine experts rated the quality of each wine, providing a rating between 0 (very bad) and 10 (very excellent).
+
+```{r echo = FALSE , message = FALSE , warning = FALSE , packages}
+#loading all the neccessary libraries here
+library(ggplot2)                        # for various plots
+library(dplyr)                          # to access dplyr functions
+library(gridExtra)                      # for multiple plots
+library(GGally)                         #for matrices
+library(knitr)
+```
+
+```{r global_options, include = FALSE}
+#Global chunk to avoid unneccessary warning and messages in knitted file
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r echo = FALSE , myfunction}
+#Making a fuction for ggplot
+myfunction <- function(variable) {
+                return(ggplot(aes_string(x = variable), data = wine) + 
+           geom_histogram(color = I('black'),fill = I('#099009')))}
+```
+
+```{r echo = FALSE , Load_the_Data}
+# Loading the our wine dataset
+wine <- read.csv('wineQualityWhites.csv')
+head(wine)                             #getting a glimpse of data
+```
+
+# Removing unneccessary columns
+```{r echo = FALSE}
+wine <- subset(wine,select = -X)            #removing X column
+names(wine)
+```
+
+Now we have only 12 variables in our dataset which will be used in our analysis. Before going to analysis part, let's have a idea about all the variables present in our dataset.
+
+1. fixed.acidity - The predominant fixed acids found in wines are tartaric, malic, citric, and succinic.These high-acid wines can be treated to reduce the acidity, either by neutralizing agents, or by malo-lactic fermentation.
+
+2. volatile.acidity - Volatile acidity is mostly caused by bacteria in the wine creating acetic acid - the acid that gives vinegar its characteristic flavor and aroma.
+
+3. citric.acid - Citric acid, minor in grapes but major in many other fruits, is often added to wines to increase acidity, complement a specific flavor or prevent ferric hazes.
+
+4. residual.sugar - Residual Sugar (RS) This is the level of glucose and fructose (grape sugars) that are not converted into alcohol during fermentation.
+
+5. chlorides - It determines the amont of salt present in wine.
+
+6. free.sulfur.dioxide - For white wines, a level of 0.8 ppm molecular SO2 will slow down the growth of yeast and will prevent the growth of most other microbes. This level of sulfur dioxide will bind up most of the acetaldehyde in a wine and reduce any oxidation aroma considerably.
+
+7. total.sulfur.dioxide - Bound sulfur dioxide is chemically bonded to other wine materials and this form plays a more or less passive role in winemaking. The sum of the free and bound sulfur dioxide is called total sulfur dioxide.
+
+8. density - concentration of ethanol.
+
+9. pH - Most wine pH's fall around 3 or 4; about 3.0 to 3.4 is desirable for white wines.
+
+10. sulphates - Sulfites are created naturally during the fermentation process. After a wine has fermented it usually contains somewhere between 2 and 10 parts per million (ppm).
+
+11. alcohol - 9%-16% (most often 12.5%-14.5%)
+
+12. quality - It depends on score between 0-10. and we are analysing quality of white wine in our analysis.
+
+
+# Univariate Plots Section
+
+```{r echo = FALSE , Univariate_Plot1}
+summary(wine)
+```
+
+# Analysis of summary :
+1. There is a big range for sulfur.dioxide (both Free and Total) across the samples.
+2. The alcohol content varies from 8.00 to 14.90 for the samples in dataset.
+3. The quality of the samples range from 3 to 9 with 6 being the median.
+4. The range for fixed acidity is quite high with minimum being 3.8 and maximum being 15.9,
+5. pH value varies from 2.720 to 3.820 with a median being 3.180.
+6. Median quality is 6 i.e. half of the sample have good quality of wines.
+
+```{r echo = FALSE , Univariate_Plot2}
+# here we are creating four histograms for analysing four different variables in the white wine.
+p1 <- myfunction(wine$pH) +
+      xlab('pH') +
+      ggtitle('pH distribution for White wine')
+p2 <- myfunction(wine$free.sulfur.dioxide) +
+      xlab('Free SO2 concentration(mg / dm^3)') +
+      ggtitle('Free SO2 distribution for White wine')
+p3 <- myfunction(wine$total.sulfur.dioxide) +
+      xlab('Total SO2 concentration(mg / dm^3)') +
+      ggtitle('Total SO2 distribution for White wine')
+p4 <- myfunction(wine$alcohol) +
+      xlab('Alcohol(% by volume)') +
+      ggtitle('Alcohol distribution for White wine')
+
+grid.arrange(p1 , p2 , p3 , p4 , ncol = 2)
+```
+
+Alcohol distribution does show a bimodal plot and if we would increase the binwidth then this would be more clear. Rest plots show a normal distribution
+
+# Univariate Analysis
+
+1. We see that ph distribution is normal and most of our sample is falling btween 3. 3.3 ph value i.e. a good range for white wine.
+2. The free sulfur dioxide seems to spread between 0 to 120 with peak exhibiting around 50.
+3. The total sulfur dioxide seems to a have a spread between 0 and 250 and exhibiting peak around 150.There seems to be a lower peak exhibited around the 20 mark.
+4. We see that alcohol distribution is widely spread and most of our sample is falling  in range of 9-12% i.e. a good value for our data set but if we talk about best value then it would range something between 12-14% , so our sample has very less no. of best alcohol percentage.
+
+```{r echo = FALSE , Quality_of_wine}
+# Plotting for the quality of white wines
+ggplot(aes(x = as.factor(quality)) , data = wine) +
+      geom_bar() +
+      xlab('Quality in terms of rating') +
+      ggtitle('Quality distribution for White wine')
+```
+
+Here we can observe that most of sample is of 6 and more rating so our wine sample is preety nice.But there are few values at 3 & 4, which can be taken as non-desirable values as rating of 3-4 falls in a poor category.
+
+```{r echo = FALSE , fixed_acidity}
+# Plotting for the fixed_acidity of white wines
+myfunction(wine$fixed.acidity) +
+      xlab('Fixed Acidity (g / dm ^ 3)') +
+      ggtitle('fixed_acidity distribution for White wine')
+```
+
+This plot shows a normal distribution and their are some outliers present in the plot and we can remove them by limitting the x-axis.
+
+```{r echo = FALSE , fixed_acidity_in_log_scale}
+#Removing outliers for fixed_acidity of white wines
+myfunction(wine$fixed.acidity) +
+      xlab('Fixed Acidity (g / dm ^ 3)') +
+      xlim(4 , 10) +              #limiting x axis
+      ggtitle('fixed_acidity distribution for White wine')
+```
+
+Now I have removed outliers in this plot by limiting the x-axis and this plot looks more normal now and by looking at plot only we can say that mean and median are close to each other.
+
+```{r echo = FALSE , volatile_acidity}
+# Plotting for the volatile_acidity of white wines
+p1 <- ggplot(wine, aes(x = volatile.acidity)) +
+      geom_histogram(binwidth = 0.01) +
+      labs(x = 'Volatile Acidity (g/L)', y = 'Count',
+          title = "Volatile acidity distribution") 
+
+p2 <- ggplot(wine, aes(y = volatile.acidity, x = 1)) +
+      geom_boxplot(color = 'blue') +
+      geom_jitter(aes(x = 1, y = volatile.acidity), alpha = 0.3) +
+      labs(y = 'Volatile Acidity (g/L)', x = '',
+          title = "Volatile acidity distribution") +
+      coord_flip()
+
+grid.arrange(p1, p2)
+```
+
+here we can see that volatile acidity is have a tail of outliers , which is better depicted from the box plot and the range for acidity is in admissible range which shows our sample is of good quality.
+
+```{r echo = FALSE , citric_acid}
+# Plotting for the citric_acid of white wines
+myfunction(wine$citric.acid) +
+      xlab('citric Acid (g / dm ^ 3)') +
+      ggtitle('citric_acid distribution for White wine')
+```
+
+Citric acid plays a major role in a winemakers influence on acidity. Many winemakers use citric acid to acidify wines that are too basic and as a flavor additive. This process has is benefits and drawbacks. Adding citric acid will give the wine "freshness" otherwise not present and will effectively make a wine more acidic.
+
+```{r echo = FALSE , residual_sugar}
+# Plotting for the residual_sugar of white wines
+myfunction(log10(wine$residual.sugar)) +
+      xlab('residual_sugar (g / dm ^ 3)') +
+      ggtitle('residual_sugar distribution for White wine')
+```
+
+This plot shows a bimodaldistribution which implies that it has two major range for its quantity that are used in our sample. So it can be depicted that our samples are taken from two main regions where concentration of residual sugar was different.
+
+```{r echo = FALSE , CHLORIDE}
+# Plotting for the chlorides in white wines
+myfunction(log10(wine$chlorides)) +
+      xlab('chlorides (g / dm ^ 3)') + 
+      ggtitle ("Log transform of chlorides  ")
+
+summary(wine$chlorides)
+```
+
+chlorides gives the amount of salt in the wine.
+
+```{r echo = FALSE , density_plot}
+# Plotting for the density in white wines
+myfunction(wine$density) +
+      xlab('chlorides (g / cm ^ 3)') + 
+      ggtitle (" density plot ")
+
+```
+
+density of wine is close to that of water depending on the percent alcohol and sugar content.The distribution is normal approaching to 1 which is density of water.
+
+```{r echo = FALSE , sulphates}
+# Plotting for the sulphates in white wines
+myfunction(wine$sulphates) +
+      xlab('sulphates (g / dm ^ 3)') + 
+      ggtitle (" sulphates plot ")
+```
+
+A wine additive which can contribute to sulfur dioxide gas (S02) levels, wich acts as an antimicrobial and antioxidant.As expected from free sulfur dioxide graph this graph is also positive skewed with long tail.
+
+# Bivariate Plots Section
+
+In this section we will find relation between two variables of our dataset and then discuss about the outcomes based on those plots and analysis.
+
+```{r echo = FALSE, Bivariate_Plot1}
+#plot between alcohol concentration and quality of alcohol
+ggplot(aes(x = alcohol , y = quality) , data = wine) +
+      geom_jitter(alpha = 0.3) +
+      xlim(9 , 14) +
+      ylim(3 , 10) +
+      xlab('alcohol (% by volume)') +
+      ylab('quality (ratings)') +
+      geom_smooth(method = 'lm' , colour = 'red') +
+      ggtitle('Plot of quality VS alcohol content(%)')
+cor(wine$alcohol , wine$quality)
+```
+
+here we see a clear trend of rising quality with alcohol concentration but their are many outliers too like at the right bottom and left top of scatter plot ,I see some dots which are not desirable. Overall correlation between these two variable loos good and is about .435 .
+
+```{r echo = FALSE , Bivariate_Plot2}
+#plot between sulphates and quality of alcohol
+ggplot(aes(x = sulphates , y = quality) , data = wine) +
+      geom_jitter(alpha = 0.3) +
+      geom_smooth(method = 'lm' , colour = 'red') +
+      xlab('sulphates ( mg / L )') +
+      ylab('quality (ratings)') +
+      ggtitle('Plot of sulphates VS alcohol content(%)')
+cor(wine$sulphates , wine$quality)
+```
+
+Here we observe a nearly straight line in middle which indicates that both the variables are not much related and correaltion is also as low as .053 .
+
+```{r echo = FALSE , Bivariate_Plot3}
+#plot between free sulfur dioxides and total sulfur dioxide
+ggplot(aes(x = free.sulfur.dioxide , y = total.sulfur.dioxide) , data = wine) +
+      geom_point(alpha = 0.05) +
+      xlim(0,100) +  #removing outliers from the plot
+      geom_smooth(method = 'lm' , colour = 'red') +
+      xlab('free SO2 (mg / dm ^ 3)') +
+      ylab('total SO2 (mg / dm^3)') +
+      ggtitle('Plot of free sulfur dioxides VS total sulfur dioxide')
+cor(wine$free.sulfur.dioxide , wine$total.sulfur.dioxide)
+```
+
+Here we see that there is a strong correlation between both of these variables, which is obvious because as the value of free sulphur dioxide will increase then it will surely result in the increase of total sulphur dioxide.
+
+```{r echo = FALSE , Scatter_Matrix }
+# scatter plot for all possible pairs
+theme_set(theme_minimal(20))   #setting minimal theme 20
+set.seed(2000)                 #taking 2000 random samples from dataset
+ggpairs(wine[sample.int(nrow(wine) , 1000) , ])
+
+```
+
+We have plotted a scatter matrix for each possible pairs in our data set and correlation of various pairs is also calculated here.
+Here we can see that alcohol concentration and residual sugar have the strongest correlation of -0.817, which is quite high.
+Also least value of correlation is found out between citric acid and quality i.e. 0.0023, which indicates that they have no relation as such.
+
+# Multivariate Plots Section
+
+```{r echo = FALSE , Box_plot}
+#Box plots of alcohol on scale of quality
+ggplot(aes(factor(quality) , alcohol) , data = wine) +
+      geom_jitter( alpha = .3)  +
+      geom_boxplot( alpha = .5 , color = 'orange') +
+      stat_summary(fun.y = "mean" , 
+               geom = "point" , 
+               color = "red", 
+               shape = 8 , 
+               size = 4) +
+      ylab('alcohol (% by volume)') +
+      ggtitle('Box plots of alcohol on scale of quality') 
+```
+
+In this Box plot we can see that x-axis have 7 points from 3-9. and for each rating of quality box plot is plotted with mean value as reference. It is observed that most of the sample is at rating 5 & 6.
+
+```{r echo =FALSE , Multivariate_Plot1}
+# Plot of alcohol VS residual sugar 
+ggplot(wine , aes(x = alcohol , y = residual.sugar)) +
+      geom_point(alpha=.05) + 
+      geom_jitter(position = position_jitter() , aes(color = factor(quality))) +
+      ylim(0,25) +
+      scale_colour_brewer(type = 'seq') +
+      theme_dark() +
+      xlab('alcohol (% by volume)') +
+      ylab('residual sugar (g / dm ^ 3)') +
+      ggtitle('Plot of alcohol VS residual sugar')
+```
+
+In this plot our qualitative variable is quality and we can see in the plot that there upper value of y is 25 because i have limited the plot on y-axis to remove outliers present so that we can see a better relationship between residual sugar and alcohol concentration.
+
+```{r echo = FALSE , Multivariate_Plot2}
+#Total SO2 and citric acid Relationship
+ggplot(aes(x = total.sulfur.dioxide , y = citric.acid) , data = wine) + 
+  geom_point(aes(color = as.factor(quality)) ,
+  alpha = 1/4 , position = 'jitter')+
+  scale_colour_brewer(type = "seq") +
+  xlab('total SO2 (mg / dm^3)') +
+  ylab('citric acid (g / dm ^ 3)') +
+  ggtitle('Total SO2 VS citric acid Relationship') 
+```
+
+In this plot we can see that when content of total SO2 is between 100-150 and citric acid value is ranging between .25-.5 , then we are getting some good quality of wine.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo = FALSE , residual_sugar.}
+# Plotting for the residual_sugar of white wines
+myfunction(log10(wine$residual.sugar)) +
+      xlab('residual_sugar (g / dm ^ 3)') +
+      ggtitle('residual_sugar distribution')
+summary(wine$residual.sugar)
+```
+
+### Description One
+
+When we plotted for residual sugar for with normal scale then nothing was clear from the plot and taking this to log scaale we found a bimodal plot. It is rare to find wines with a level of less than 1 g/L. and we have minimum value of 0.6 so some wines are below desired level and we see that maximun value if at 65.80 which is an outlier 
+
+### Plot Two
+
+```{r echo = FALSE , Plot_Two}
+#Total SO2 and citric acid Relationship
+ggplot(aes(x = total.sulfur.dioxide , y = citric.acid) , data = wine) + 
+  geom_point(aes(color = as.factor(quality)) ,
+  alpha = 1/4 , position = 'jitter')+
+  scale_colour_brewer(type = "seq") +
+  xlab('total SO2 (mg / dm^3)') +
+  ylab('citric acid (g / dm ^ 3)') +
+  ggtitle('Total SO2 VS citric acid Relationship') 
+```
+
+### Description Two
+
+Sulfur dioxide plays two important roles. Firstly, it is an anti-microbial agent, and as such is used to help curtail the growth of undesirable fault producing yeasts and bacteria. Secondly, it acts as an antioxidant, safeguarding the wine's fruit integrity and protecting it against browning. Whereas citric acid determines the freshness. So these two parameter plays an important role in determining the quality of wine and that we have analysed in this plot.
+
+### Plot Three
+
+```{r echo = FALSE , Plot_Three}
+ggplot(aes(factor(quality) , alcohol) , data = wine) +
+      geom_jitter( alpha = .3)  +
+      geom_boxplot( alpha = .5 , color = 'orange') +
+      stat_summary(fun.y = "mean" , 
+               geom = "point" , 
+               color = "red", 
+               shape = 8 , 
+               size = 4) +
+      ylab('alcohol (% by volume)') +
+      ggtitle('Box plots of alcohol on scale of quality')
+```
+
+### Description Three
+
+Box plots characterize a sample using the 25th, 50th and 75th percentiles-also known as the lower quartile (Q1), median (m or Q2) and upper quartile (Q3)-and the interquartile range (IQR = Q3 - Q1), which covers the central 50% of the data. So this plots gives the summary of alcohol content with mean value for each rating of quality. 
+
+------
+
+# Reflection
+In this project work I have chosen white_wine dataset for analysis and my analysis of variables was mainly foucussed around the quality of the wine. As quality is one variable that reflects that wine is good for consumption or not.
+I have gone through many problematic areas during my analysis , like I was unaware about the alcohol concentration that would be good in wines and amount of sulphates and citric acid requied.
+During my analysis I found some variables which are strongly dependent over each other like alcohol content and sulphur dioxide , residual sugar and density.
+Some pairs are also found out with negligible correlation like alcohol and sulphates and there are many others.
+Our main  focus is on quality of the wine and for an ideal wine some experimental work is also required as data collected by human can have error in it.
+A limitation of the current analysis is that the current data consists of samples collected from a specific region.It will be intresting to obtain datasets across various wine making regions to eliminate any bias created by any secific qualities of the product.
